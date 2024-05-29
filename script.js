@@ -20,11 +20,10 @@ particleSizeSlider.addEventListener('input', () => {
 });
 
 class Particle {
-    constructor(x, y, radius, color) {
+    constructor(x, y, radius) {
         this.x = x;
         this.y = y;
         this.radius = radius;
-        this.color = color;
         this.velocity = {
             x: (Math.random() - 0.5) * 5,
             y: (Math.random() - 0.5) * 5
@@ -32,12 +31,21 @@ class Particle {
         this.mass = 1;
     }
 
+    getSpeed() {
+        return Math.hypot(this.velocity.x, this.velocity.y);
+    }
+
+    getColor() {
+        const maxSpeed = 5; // Max speed for the color scaling
+        const speed = this.getSpeed();
+        const hue = (1 - Math.min(speed / maxSpeed, 1)) * 240; // Blue to Red
+        return `hsl(${hue}, 100%, 50%)`;
+    }
+
     draw() {
-        // Ensure proper logging without repeated decimals
-        console.log(`Drawing particle at (${this.x}, ${this.y}) with radius ${this.radius}`);
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.getColor();
         ctx.fill();
         ctx.closePath();
     }
@@ -118,7 +126,6 @@ function initializeParticles() {
     for (let i = 0; i < numberOfParticles; i++) {
         let x = Math.random() * (canvas.width - particleRadius * 2) + particleRadius;
         let y = Math.random() * (canvas.height - particleRadius * 2) + particleRadius;
-        const color = 'blue';
 
         if (i !== 0) {
             for (let j = 0; j < particles.length; j++) {
@@ -131,7 +138,7 @@ function initializeParticles() {
             }
         }
 
-        particles.push(new Particle(x, y, particleRadius, color));
+        particles.push(new Particle(x, y, particleRadius));
     }
     console.log(`Particles initialized:`, particles);
 }
