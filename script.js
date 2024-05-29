@@ -143,11 +143,69 @@ function initializeParticles() {
     console.log(`Particles initialized:`, particles);
 }
 
-function animate() {
+// Create the chart
+const speedCanvas = document.getElementById('speedChart');
+const speedChartCtx = speedCanvas.getContext('2d');
+
+const speedChart = new Chart(speedChartCtx, {
+    type: 'line',
+    data: {
+        labels: [], // Time labels
+        datasets: [{
+            label: 'Average Speed',
+            data: [],
+            borderColor: 'red',
+            fill: false
+        }]
+    },
+    options: {
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Time'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Average Speed'
+                },
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+let lastUpdateTime = 0;
+const updateInterval = 1000; // Update the chart every second
+
+function updateChart(averageSpeed) {
+    const currentTime = speedChart.data.labels.length;
+    speedChart.data.labels.push(currentTime);
+    speedChart.data.datasets[0].data.push(averageSpeed);
+    speedChart.update();
+}
+
+function calculateAverageSpeed() {
+    const totalSpeed = particles.reduce((sum, particle) => sum + particle.getSpeed(), 0);
+    return totalSpeed / particles.length;
+}
+
+function animate(timestamp) {
     requestAnimationFrame(animate);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     particles.forEach(particle => particle.update(particles));
-    console.log(`Canvas updated.`);
+
+    // Calculate and update the average speed if enough time has passed
+    if (timestamp - lastUpdateTime > updateInterval) {
+        const averageSpeed = calculateAverageSpeed();
+        if (averageSpeed !== null) { // Ensure valid data
+            updateChart(averageSpeed);
+            console.log(`Average speed: ${averageSpeed}`);
+        }
+        lastUpdateTime = timestamp;
+    }
 }
 
 initializeParticles();
