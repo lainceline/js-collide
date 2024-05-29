@@ -1,8 +1,23 @@
 const canvas = document.getElementById('simulationCanvas');
 const ctx = canvas.getContext('2d');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = window.innerWidth * 0.8;
+canvas.height = window.innerHeight * 0.8;
+
+const particleCountSlider = document.getElementById('particleCount');
+const particleSizeSlider = document.getElementById('particleSize');
+const particleCountLabel = document.getElementById('particleCountLabel');
+const particleSizeLabel = document.getElementById('particleSizeLabel');
+
+particleCountSlider.addEventListener('input', () => {
+    particleCountLabel.innerText = particleCountSlider.value;
+    initializeParticles();
+});
+
+particleSizeSlider.addEventListener('input', () => {
+    particleSizeLabel.innerText = particleSizeSlider.value;
+    initializeParticles();
+});
 
 class Particle {
     constructor(x, y, radius, color) {
@@ -14,10 +29,12 @@ class Particle {
             x: (Math.random() - 0.5) * 5,
             y: (Math.random() - 0.5) * 5
         };
-        this.mass = 1; // Assuming all particles have the same mass
+        this.mass = 1;
     }
 
     draw() {
+        // Ensure proper logging without repeated decimals
+        console.log(`Drawing particle at (${this.x}, ${this.y}) with radius ${this.radius}`);
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
         ctx.fillStyle = this.color;
@@ -31,7 +48,6 @@ class Particle {
             const dist = Math.hypot(this.x - particle.x, this.y - particle.y);
 
             if (dist - this.radius - particle.radius < 0) {
-                // Resolve collision
                 resolveCollision(this, particle);
             }
         }
@@ -68,7 +84,6 @@ function resolveCollision(particle, otherParticle) {
     const xDist = otherParticle.x - particle.x;
     const yDist = otherParticle.y - particle.y;
 
-    // Prevent accidental overlap of particles
     if (xVelocityDiff * xDist + yVelocityDiff * yDist >= 0) {
         const angle = -Math.atan2(otherParticle.y - particle.y, otherParticle.x - particle.x);
 
@@ -92,34 +107,41 @@ function resolveCollision(particle, otherParticle) {
     }
 }
 
-const particles = [];
-for (let i = 0; i < 50; i++) {
-    const radius = 20;
-    let x = Math.random() * (canvas.width - radius * 2) + radius;
-    let y = Math.random() * (canvas.height - radius * 2) + radius;
-    const color = 'blue';
+let particles = [];
 
-    if (i !== 0) {
-        for (let j = 0; j < particles.length; j++) {
-            if (Math.hypot(x - particles[j].x, y - particles[j].y) - radius * 2 < 0) {
-                x = Math.random() * (canvas.width - radius * 2) + radius;
-                y = Math.random() * (canvas.height - radius * 2) + radius;
+function initializeParticles() {
+    particles = [];
+    const numberOfParticles = parseInt(particleCountSlider.value);
+    const particleRadius = parseInt(particleSizeSlider.value);
 
-                j = -1;
+    console.log(`Initializing ${numberOfParticles} particles with radius ${particleRadius}`);
+    for (let i = 0; i < numberOfParticles; i++) {
+        let x = Math.random() * (canvas.width - particleRadius * 2) + particleRadius;
+        let y = Math.random() * (canvas.height - particleRadius * 2) + particleRadius;
+        const color = 'blue';
+
+        if (i !== 0) {
+            for (let j = 0; j < particles.length; j++) {
+                if (Math.hypot(x - particles[j].x, y - particles[j].y) - particleRadius * 2 < 0) {
+                    x = Math.random() * (canvas.width - particleRadius * 2) + particleRadius;
+                    y = Math.random() * (canvas.height - particleRadius * 2) + particleRadius;
+
+                    j = -1;
+                }
             }
         }
-    }
 
-    particles.push(new Particle(x, y, radius, color));
+        particles.push(new Particle(x, y, particleRadius, color));
+    }
+    console.log(`Particles initialized:`, particles);
 }
 
 function animate() {
     requestAnimationFrame(animate);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let particle of particles) {
-        particle.update(particles);
-    }
+    particles.forEach(particle => particle.update(particles));
+    console.log(`Canvas updated.`);
 }
 
+initializeParticles();
 animate();
-
